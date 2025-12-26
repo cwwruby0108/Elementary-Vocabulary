@@ -1,610 +1,702 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Volume2, 
-  ChevronLeft, 
-  ChevronRight, 
-  BookOpen, 
-  Gamepad2, 
-  List, 
-  Star, 
-  RefreshCcw,
-  CheckCircle,
-  XCircle,
-  Trophy,
-  Search,
-  Filter
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小六英文單字王</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel 用於解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// 完整 150 個單字資料庫
-const fullVocabularyData = [
-  // Part 1
-  { id: 1, part: 1, word: "ball", meaning: "球", sentence: "Let's play ball.", trans: "來玩球吧。", emoji: "🏀" },
-  { id: 2, part: 1, word: "baseball", meaning: "棒球", sentence: "He likes to play baseball.", trans: "他愛打棒球。", emoji: "⚾" },
-  { id: 3, part: 1, word: "basketball", meaning: "籃球", sentence: "He plays basketball everyday.", trans: "他每天打籃球。", emoji: "🏀" },
-  { id: 4, part: 1, word: "morning", meaning: "早上", sentence: "Good morning, Mr. Wang.", trans: "王先生,早安。", emoji: "🌅" },
-  { id: 5, part: 1, word: "afternoon", meaning: "下午", sentence: "Good afternoon, Mrs. Wang.", trans: "王太太,午安。", emoji: "☀️" },
-  { id: 6, part: 1, word: "evening", meaning: "傍晚", sentence: "Good evening, Mrs. Wang.", trans: "王女士,晚安。", emoji: "🌇" },
-  { id: 7, part: 1, word: "climb", meaning: "爬", sentence: "My mom likes to go mountain climbing.", trans: "我媽媽喜歡爬山。", emoji: "🧗" },
-  { id: 8, part: 1, word: "dance", meaning: "跳舞", sentence: "She can dance.", trans: "她會跳舞。", emoji: "💃" },
-  { id: 9, part: 1, word: "draw", meaning: "畫圖", sentence: "She draws very well.", trans: "她很會畫圖。", emoji: "🎨" },
-  { id: 10, part: 1, word: "exercise", meaning: "運動", sentence: "I need to exercise more.", trans: "我需要多運動。", emoji: "🏃" },
-
-  // Part 2
-  { id: 11, part: 2, word: "comic", meaning: "漫畫書", sentence: "I have a new comic book.", trans: "我有一本新漫畫書。", emoji: "📚" },
-  { id: 12, part: 2, word: "fun", meaning: "有趣", sentence: "It is fun!", trans: "好好玩!", emoji: "😄" },
-  { id: 13, part: 2, word: "game", meaning: "遊戲", sentence: "Nobody wants to play games with me.", trans: "沒有人要跟我玩遊戲。", emoji: "🎮" },
-  { id: 14, part: 2, word: "doll", meaning: "洋娃娃", sentence: "You have many dolls.", trans: "你有好多洋娃娃。", emoji: "🧸" },
-  { id: 15, part: 2, word: "interest", meaning: "興趣", sentence: "He has many interests.", trans: "他有很多興趣。", emoji: "❤️" },
-  { id: 16, part: 2, word: "joy", meaning: "喜悦", sentence: "My heart is full of joy.", trans: "我心充滿歡喜。", emoji: "🥳" },
-  { id: 17, part: 2, word: "kite", meaning: "風箏", sentence: "We are playing kites.", trans: "我們正在放風箏。", emoji: "🪁" },
-  { id: 18, part: 2, word: "movie", meaning: "電影", sentence: "Let's see a movie!", trans: "去看電影吧!", emoji: "🎬" },
-  { id: 19, part: 2, word: "music", meaning: "音樂", sentence: "He likes to listen to the music.", trans: "他愛聽音樂。", emoji: "🎵" },
-  { id: 20, part: 2, word: "paint", meaning: "繪畫", sentence: "You are painting.", trans: "你正在畫畫。", emoji: "🖌️" },
-
-  // Part 3
-  { id: 21, part: 3, word: "piano", meaning: "鋼琴", sentence: "You can't play the piano.", trans: "你不會彈鋼琴。", emoji: "🎹" },
-  { id: 22, part: 3, word: "play", meaning: "玩", sentence: "Let's go out and play.", trans: "我們出去玩吧。", emoji: "🛝" },
-  { id: 23, part: 3, word: "player", meaning: "選手", sentence: "He is a baseball player.", trans: "他是棒球選手。", emoji: "🧢" },
-  { id: 24, part: 3, word: "run", meaning: "跑步", sentence: "Run!", trans: "快跑!", emoji: "🏃" },
-  { id: 25, part: 3, word: "shop", meaning: "購物", sentence: "He likes to go shopping.", trans: "他很愛購物。", emoji: "🛍️" },
-  { id: 26, part: 3, word: "sing", meaning: "唱歌", sentence: "I don't know how to sing.", trans: "我不知道怎麼唱歌。", emoji: "🎤" },
-  { id: 27, part: 3, word: "swim", meaning: "游泳", sentence: "Can he swim?", trans: "他會游泳嗎?", emoji: "🏊" },
-  { id: 28, part: 3, word: "song", meaning: "歌", sentence: "I love this song.", trans: "我愛這首歌。", emoji: "🎶" },
-  { id: 29, part: 3, word: "sport", meaning: "運動", sentence: "Soccer is your favorite sport.", trans: "足球是你最愛的運動。", emoji: "⚽" },
-  { id: 30, part: 3, word: "toy", meaning: "玩具", sentence: "Kids like toys.", trans: "小孩都喜歡玩具。", emoji: "🤖" },
-
-  // Part 4
-  { id: 31, part: 4, word: "win", meaning: "贏", sentence: "You win again.", trans: "你又贏了。", emoji: "🏆" },
-  { id: 32, part: 4, word: "bathroom", meaning: "廁所", sentence: "May I go to the bathroom?", trans: "我可以去上廁所嗎?", emoji: "🚽" },
-  { id: 33, part: 4, word: "bedroom", meaning: "臥房", sentence: "My mother wants me to clean up my bedroom right now.", trans: "我媽要我馬上打掃臥室。", emoji: "🛏️" },
-  { id: 34, part: 4, word: "dining room", meaning: "飯廳", sentence: "She is in the dining room.", trans: "她在飯廳。", emoji: "🍽️" },
-  { id: 35, part: 4, word: "home", meaning: "家", sentence: "Home is where the heart is.", trans: "家就是心之所在。", emoji: "🏠" },
-  { id: 36, part: 4, word: "house", meaning: "房子", sentence: "They live in a small house.", trans: "他們住在小房子裡。", emoji: "🏡" },
-  { id: 37, part: 4, word: "kitchen", meaning: "廚房", sentence: "Where is the kitchen?", trans: "廚房在哪裡?", emoji: "👨‍🍳" },
-  { id: 38, part: 4, word: "living room", meaning: "客廳", sentence: "The living room is so big.", trans: "這間客廳好大。", emoji: "🛋️" },
-  { id: 39, part: 4, word: "room", meaning: "房間", sentence: "Go back to your room.", trans: "回你的房間。", emoji: "🚪" },
-  { id: 40, part: 4, word: "study", meaning: "學習", sentence: "She likes to study English.", trans: "她喜歡學習英文。", emoji: "📖" },
-
-  // Part 5
-  { id: 41, part: 5, word: "window", meaning: "窗戶", sentence: "Please keep the windows open.", trans: "請讓窗戶開著。", emoji: "🪟" },
-  { id: 42, part: 5, word: "bed", meaning: "床", sentence: "Time to go to bed.", trans: "該上床睡覺了。", emoji: "🛌" },
-  { id: 43, part: 5, word: "chair", meaning: "椅子", sentence: "The chair is broken.", trans: "這椅子壞了。", emoji: "🪑" },
-  { id: 44, part: 5, word: "desk", meaning: "書桌", sentence: "Please read at your desk.", trans: "請到你的書桌那邊讀書。", emoji: "🖥️" },
-  { id: 45, part: 5, word: "sofa", meaning: "沙發", sentence: "Please sit on the sofa.", trans: "請坐在沙發上。", emoji: "🛋️" },
-  { id: 46, part: 5, word: "table", meaning: "桌子", sentence: "The table is green.", trans: "這張桌子是綠色的。", emoji: "🪵" },
-  { id: 47, part: 5, word: "camera", meaning: "相機", sentence: "My father has two digital cameras.", trans: "我爸有兩台數位相機。", emoji: "📷" },
-  { id: 48, part: 5, word: "computer", meaning: "電腦", sentence: "My older brother has a new computer.", trans: "我哥哥有一台新電腦。", emoji: "💻" },
-  { id: 49, part: 5, word: "friend", meaning: "朋友", sentence: "We all need friends.", trans: "人都需要朋友。", emoji: "🤝" },
-  { id: 50, part: 5, word: "radio", meaning: "收音機", sentence: "Turn on the radio.", trans: "打開收音機。", emoji: "📻" },
-
-  // Part 6
-  { id: 51, part: 6, word: "telephone", meaning: "電話", sentence: "You can use my telephone.", trans: "你可以用我的電話。", emoji: "☎️" },
-  { id: 52, part: 6, word: "television", meaning: "電視", sentence: "They watch too much television.", trans: "他們看太多電視了。", emoji: "📺" },
-  { id: 53, part: 6, word: "video", meaning: "錄影帶/影片", sentence: "We go to the video store every week.", trans: "我們每週都去錄影帶店。", emoji: "📼" },
-  { id: 54, part: 6, word: "blackboard", meaning: "黑板", sentence: "The teacher is writing on the blackboard.", trans: "老師正在黑板上寫字。", emoji: "🏫" },
-  { id: 55, part: 6, word: "classroom", meaning: "教室", sentence: "Please be quiet in the classroom.", trans: "教室內請保持安靜。", emoji: "👩‍🏫" },
-  { id: 56, part: 6, word: "elementary school", meaning: "國小", sentence: "Welcome to Nan-Shi elementary school.", trans: "歡迎來到南勢國小。", emoji: "🏫" },
-  { id: 57, part: 6, word: "grade", meaning: "年級", sentence: "I'm in the sixth grade this year.", trans: "我今年六年級。", emoji: "6️⃣" },
-  { id: 58, part: 6, word: "school", meaning: "學校", sentence: "I go to school at 7 o'clock.", trans: "我七點上學。", emoji: "🎒" },
-  { id: 59, part: 6, word: "book", meaning: "書", sentence: "He has many books.", trans: "他有很多書。", emoji: "📚" },
-  { id: 60, part: 6, word: "dictionary", meaning: "字典", sentence: "He can look up words in the dictionary.", trans: "他會查字典。", emoji: "📖" },
-
-  // Part 7
-  { id: 61, part: 7, word: "eraser", meaning: "橡皮擦", sentence: "May I use your eraser?", trans: "你的橡皮擦可以借我嗎?", emoji: "🧼" },
-  { id: 62, part: 7, word: "paper", meaning: "紙", sentence: "I need a piece of paper.", trans: "我需要一張紙。", emoji: "📄" },
-  { id: 63, part: 7, word: "pen", meaning: "筆", sentence: "She doesn't have a red pen.", trans: "她沒有紅筆。", emoji: "🖊️" },
-  { id: 64, part: 7, word: "pencil", meaning: "鉛筆", sentence: "She has ten pencils.", trans: "她有十支鉛筆。", emoji: "✏️" },
-  { id: 65, part: 7, word: "ruler", meaning: "尺", sentence: "You need a ruler to draw a line.", trans: "你畫線要用尺。", emoji: "📏" },
-  { id: 66, part: 7, word: "tape", meaning: "膠帶", sentence: "We need the tape to seal the box.", trans: "我們需要膠帶封箱。", emoji: "🩹" },
-  { id: 67, part: 7, word: "workbook", meaning: "習作本", sentence: "Please open your workbooks to page 1.", trans: "請打開習作第一頁。", emoji: "📓" },
-  { id: 68, part: 7, word: "art", meaning: "藝術", sentence: "You have three art classes every week.", trans: "你們每週有三堂美術課。", emoji: "🎨" },
-  { id: 69, part: 7, word: "class", meaning: "課/班級", sentence: "My favorite class is English.", trans: "我最喜歡英文課。", emoji: "🏫" },
-  { id: 70, part: 7, word: "math", meaning: "數學", sentence: "Your favorite class is math.", trans: "你最喜歡數學課。", emoji: "➕" },
-
-  // Part 8
-  { id: 71, part: 8, word: "PE", meaning: "體育課", sentence: "His favorite class is PE.", trans: "他最喜歡體育課。", emoji: "🤸" },
-  { id: 72, part: 8, word: "ask", meaning: "問", sentence: "Can I ask him a question?", trans: "我可以問他問題嗎?", emoji: "🙋" },
-  { id: 73, part: 8, word: "correct", meaning: "正確的", sentence: "Your answer is correct.", trans: "你答對了。", emoji: "✅" },
-  { id: 74, part: 8, word: "answer", meaning: "答案", sentence: "Their answers are wrong.", trans: "他們的答案錯了。", emoji: "📝" },
-  { id: 75, part: 8, word: "copy", meaning: "抄寫", sentence: "Please copy the answers on the blackboard.", trans: "請抄寫黑板上的答案。", emoji: "✍️" },
-  { id: 76, part: 8, word: "grade", meaning: "成績", sentence: "I got good grades on midterm test.", trans: "我的期中考考得很不錯。", emoji: "💯" },
-  { id: 77, part: 8, word: "homework", meaning: "回家功課", sentence: "He has too much homework to do.", trans: "他有很多回家功課要寫。", emoji: "🏠" },
-  { id: 78, part: 8, word: "learn", meaning: "學習", sentence: "We live and learn.", trans: "活到老學到老。", emoji: "🧠" },
-  { id: 79, part: 8, word: "practice", meaning: "練習", sentence: "He needs to practice more.", trans: "他需要多一點練習。", emoji: "⛹️" },
-  { id: 80, part: 8, word: "question", meaning: "問題", sentence: "Do you have any questions?", trans: "還有任何問題嗎?", emoji: "❓" },
-
-  // Part 9
-  { id: 81, part: 9, word: "read", meaning: "閱讀", sentence: "He reads the newspaper everyday.", trans: "他每天閱讀報紙。", emoji: "📖" },
-  { id: 82, part: 9, word: "repeat", meaning: "重複", sentence: "Please repeat after the teacher.", trans: "請跟著老師重複。", emoji: "🔁" },
-  { id: 83, part: 9, word: "spell", meaning: "拼字", sentence: "He knows how to spell his name.", trans: "他知道怎麼拼他的名字。", emoji: "🔤" },
-  { id: 84, part: 9, word: "unit", meaning: "單元", sentence: "There are 5 units in this book.", trans: "這本書有5個單元。", emoji: "📑" },
-  { id: 85, part: 9, word: "teach", meaning: "教導", sentence: "Can you teach me how to ride a bike?", trans: "你可以教我怎麼騎腳踏車嗎?", emoji: "👨‍🏫" },
-  { id: 86, part: 9, word: "test", meaning: "考試", sentence: "They have a math test tomorrow.", trans: "他們明天有數學考試。", emoji: "📝" },
-  { id: 87, part: 9, word: "quiz", meaning: "測驗", sentence: "She has a vocabulary quiz next week.", trans: "下個禮拜她有單字測驗。", emoji: "✍️" },
-  { id: 88, part: 9, word: "understand", meaning: "理解", sentence: "Do you understand?", trans: "你明白嗎?", emoji: "💡" },
-  { id: 89, part: 9, word: "write", meaning: "寫", sentence: "She writes very well.", trans: "她寫得非常好。", emoji: "✏️" },
-  { id: 90, part: 9, word: "airport", meaning: "機場", sentence: "We took a taxi to the airport last night.", trans: "昨晚我們搭計程車去機場。", emoji: "✈️" },
-
-  // Part 10
-  { id: 91, part: 10, word: "bakery", meaning: "麵包店", sentence: "My mom buys bread at this bakery.", trans: "我媽媽在這家麵包店買麵包。", emoji: "🥯" },
-  { id: 92, part: 10, word: "bank", meaning: "銀行", sentence: "My dad works in a bank.", trans: "我爸爸在銀行工作。", emoji: "🏦" },
-  { id: 93, part: 10, word: "bookstore", meaning: "書店", sentence: "My uncle bought a book at the new bookstore.", trans: "我叔叔在新書店買了一本書。", emoji: "📚" },
-  { id: 94, part: 10, word: "student", meaning: "學生", sentence: "My aunt is a college student.", trans: "我的阿姨是大學生。", emoji: "🎓" },
-  { id: 95, part: 10, word: "department store", meaning: "百貨公司", sentence: "He lives near the department store.", trans: "他住在這家百貨公司附近。", emoji: "🏬" },
-  { id: 96, part: 10, word: "hospital", meaning: "醫院", sentence: "His dad works for the hospital.", trans: "他的爸爸在醫院上班。", emoji: "🏥" },
-  { id: 97, part: 10, word: "internet", meaning: "網路", sentence: "You spend too much time on the internet.", trans: "你花太多時間上網了。", emoji: "🌐" },
-  { id: 98, part: 10, word: "library", meaning: "圖書館", sentence: "His sister likes to read in the school library.", trans: "他姐姐喜歡在學校圖書館讀書。", emoji: "🏛️" },
-  { id: 99, part: 10, word: "office", meaning: "辦公室", sentence: "The homeroom teacher is in the office.", trans: "導師正在辦公室。", emoji: "🏢" },
-  { id: 100, part: 10, word: "park", meaning: "公園", sentence: "They play baseball in the park.", trans: "他們在公園打棒球。", emoji: "🌳" },
-
-  // Part 11
-  { id: 101, part: 11, word: "place", meaning: "地方", sentence: "The library is a good place to study.", trans: "圖書館是讀書的好地方。", emoji: "📍" },
-  { id: 102, part: 11, word: "post office", meaning: "郵局", sentence: "His uncle works in the post office.", trans: "他的叔叔在郵局工作。", emoji: "📮" },
-  { id: 103, part: 11, word: "restaurant", meaning: "餐廳", sentence: "His aunt owns a restaurant.", trans: "他的伯母擁有一家餐廳。", emoji: "🍽️" },
-  { id: 104, part: 11, word: "restroom", meaning: "廁所", sentence: "Excuse me. May I go to the restroom?", trans: "不好意思,我可以去一下洗手間嗎?", emoji: "🚻" },
-  { id: 105, part: 11, word: "road", meaning: "馬路", sentence: "Drive carefully on the road.", trans: "小心駕駛。", emoji: "🛣️" },
-  { id: 106, part: 11, word: "shop", meaning: "商店", sentence: "The shop opens at 9 o'clock.", trans: "這家商店九點開始營業。", emoji: "🏪" },
-  { id: 107, part: 11, word: "station", meaning: "車站", sentence: "Where is the train station?", trans: "火車站在哪裡?", emoji: "🚉" },
-  { id: 108, part: 11, word: "store", meaning: "店家", sentence: "He goes to the convenience store every morning.", trans: "他每天早上去便利商店。", emoji: "🏪" },
-  { id: 109, part: 11, word: "street", meaning: "街道", sentence: "Don't play in the street.", trans: "不要在街道上玩耍。", emoji: "🏙️" },
-  { id: 110, part: 11, word: "supermarket", meaning: "超級市場", sentence: "The supermarket is very big.", trans: "這個超級市場非常大。", emoji: "🛒" },
-
-  // Part 12
-  { id: 111, part: 12, word: "theater", meaning: "戲院", sentence: "We don't have a movie theater.", trans: "我們沒有電影院。", emoji: "🎭" },
-  { id: 112, part: 12, word: "zoo", meaning: "動物園", sentence: "How often do you go to the zoo?", trans: "你多常去動物園呢?", emoji: "🦁" },
-  { id: 113, part: 12, word: "tall", meaning: "高的", sentence: "Chien-Ming Wang is 193 centimeters tall.", trans: "王建民身高193公分。", emoji: "🦒" },
-  { id: 114, part: 12, word: "thin", meaning: "瘦的", sentence: "The dancer is thin.", trans: "那個舞者很瘦。", emoji: "🕴️" },
-  { id: 115, part: 12, word: "front", meaning: "前面的", sentence: "She wants to sit in the front of the class.", trans: "她想要坐在教室的前面。", emoji: "⬆️" },
-  { id: 116, part: 12, word: "here", meaning: "這裡", sentence: "She is not here anymore.", trans: "她不再在這裡了。", emoji: "👇" },
-  { id: 117, part: 12, word: "left", meaning: "左邊", sentence: "Please move to the left a little.", trans: "請向左邊稍微移動。", emoji: "⬅️" },
-  { id: 118, part: 12, word: "right", meaning: "右邊/正確", sentence: "Turn right, and you'll see the bus stop.", trans: "右轉,然後你會看到公車站牌。", emoji: "➡️" },
-  { id: 119, part: 12, word: "there", meaning: "那裡", sentence: "I'll always be right there.", trans: "我永遠都在。", emoji: "👉" },
-  { id: 120, part: 12, word: "airplane", meaning: "飛機", sentence: "I traveled to America by airplane.", trans: "我搭飛機去美國旅行。", emoji: "✈️" },
-
-  // Part 13
-  { id: 121, part: 13, word: "bicycle", meaning: "腳踏車", sentence: "She rides a bicycle to school.", trans: "她騎腳踏車上學。", emoji: "🚲" },
-  { id: 122, part: 13, word: "boat", meaning: "小船", sentence: "We can get to Green Island by boat.", trans: "我們可以搭小船去綠島。", emoji: "🚤" },
-  { id: 123, part: 13, word: "bus", meaning: "公車", sentence: "You can take a bus to Taipei.", trans: "你可以搭公車到台北。", emoji: "🚌" },
-  { id: 124, part: 13, word: "car", meaning: "汽車", sentence: "Her mom can drive a car.", trans: "她的媽媽會開車。", emoji: "🚗" },
-  { id: 125, part: 13, word: "taxi", meaning: "計程車", sentence: "Her dad is a taxi driver.", trans: "她的爸爸是計程車司機。", emoji: "🚕" },
-  { id: 126, part: 13, word: "motorcycle", meaning: "摩托車", sentence: "His uncle loves to ride his motorcycle.", trans: "他的伯父喜歡騎他的摩托車。", emoji: "🛵" },
-  { id: 127, part: 13, word: "van", meaning: "廂型車", sentence: "His aunt has a big van.", trans: "他的伯母有輛很大的廂型車。", emoji: "🚐" },
-  { id: 128, part: 13, word: "train", meaning: "火車", sentence: "His sister goes to school by train.", trans: "他的姊姊搭火車上學。", emoji: "🚆" },
-  { id: 129, part: 13, word: "truck", meaning: "貨車", sentence: "His parents drive a truck to work.", trans: "他的父母開貨車去工作。", emoji: "🚚" },
-  { id: 130, part: 13, word: "drive", meaning: "駕駛", sentence: "He can't drive a car yet.", trans: "他還不會開車。", emoji: "🚘" },
-
-  // Part 14
-  { id: 131, part: 14, word: "fly", meaning: "飛翔", sentence: "An airplane can't fly into space.", trans: "飛機不能飛到太空。", emoji: "🕊️" },
-  { id: 132, part: 14, word: "map", meaning: "地圖", sentence: "Dora uses the map to explore.", trans: "Dora用地圖探險。", emoji: "🗺️" },
-  { id: 133, part: 14, word: "ride", meaning: "騎乘", sentence: "It's fun to ride a bike.", trans: "騎腳踏車很有趣。", emoji: "🚴" },
-  { id: 134, part: 14, word: "turn", meaning: "轉", sentence: "Turn your head to the left and you'll see it.", trans: "你往左邊看就會看到了。", emoji: "↩️" },
-  { id: 135, part: 14, word: "basket", meaning: "籃子", sentence: "Don't put your eggs in one basket.", trans: "雞蛋不要放在同一個籃子裡。", emoji: "🧺" },
-  { id: 136, part: 14, word: "box", meaning: "箱子", sentence: "She wants a new pencil box.", trans: "她想要一個新的鉛筆盒。", emoji: "📦" },
-  { id: 137, part: 14, word: "can", meaning: "罐/能", sentence: "He wants a can of coke.", trans: "他想要一罐可樂。", emoji: "🥫" },
-  { id: 138, part: 14, word: "piece", meaning: "張,塊", sentence: "It will be a piece of cake.", trans: "這真是再簡單不過了(一塊蛋糕)。", emoji: "🧩" },
-  { id: 139, part: 14, word: "point", meaning: "分數/點", sentence: "They got 10 points.", trans: "他們得到10分。", emoji: "☝️" },
-  { id: 140, part: 14, word: "big", meaning: "大的", sentence: "It's a big world.", trans: "這個世界很寬廣。", emoji: "🐘" },
-
-  // Part 15
-  { id: 141, part: 15, word: "enough", meaning: "足夠的", sentence: "You are good enough.", trans: "你已經很棒了。", emoji: "👌" },
-  { id: 142, part: 15, word: "medium", meaning: "中間的/中等", sentence: "I want a medium coffee, please.", trans: "我想要一杯中杯咖啡。", emoji: "☕" },
-  { id: 143, part: 15, word: "high", meaning: "高的", sentence: "The birds can fly high.", trans: "鳥兒可以飛得很高。", emoji: "🏔️" },
-  { id: 144, part: 15, word: "low", meaning: "低的", sentence: "The plane is flying very low.", trans: "這輛飛機飛得很低。", emoji: "📉" },
-  { id: 145, part: 15, word: "full", meaning: "滿的/飽的", sentence: "Stop eating when you are full.", trans: "當你已經飽了就別再吃東西了。", emoji: "🌕" },
-  { id: 146, part: 15, word: "short", meaning: "短的/矮的", sentence: "His hair is short.", trans: "他是短頭髮。", emoji: "📏" },
-  { id: 147, part: 15, word: "small", meaning: "小的", sentence: "This classroom is too small.", trans: "教室太小了。", emoji: "🐁" },
-  { id: 148, part: 15, word: "line", meaning: "隊伍,列,線", sentence: "Line up, please.", trans: "請排隊。", emoji: "〰️" },
-  { id: 149, part: 15, word: "America", meaning: "美國", sentence: "I have never been to America.", trans: "我從來沒去過美國。", emoji: "🇺🇸" },
-  { id: 150, part: 15, word: "American", meaning: "美國的/人", sentence: "Do you like American food?", trans: "你喜歡美國食物嗎?", emoji: "🍔" }
-];
-
-const Flashcard = ({ item, speak }) => {
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  return (
-    <div 
-      className="relative w-full h-80 perspective-1000 cursor-pointer group"
-      onClick={() => setIsFlipped(!isFlipped)}
-    >
-      <div className={`relative w-full h-full duration-500 preserve-3d transition-transform ${isFlipped ? 'rotate-y-180' : ''}`} 
-           style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
+    <style>
+        /* 翻牌動畫相關 CSS */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
         
-        {/* Front */}
-        <div className="absolute w-full h-full bg-white rounded-3xl shadow-md hover:shadow-xl transition-all flex flex-col items-center justify-center p-4 backface-hidden border-b-8 border-blue-200">
-          <div className="absolute top-4 left-4 text-xs font-bold text-gray-300">
-            Part {item.part}
-          </div>
-          <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform">{item.emoji}</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">{item.word}</h2>
-          <p className="text-gray-400 text-xs mt-2 bg-gray-50 px-3 py-1 rounded-full">點擊翻牌</p>
-          <button 
-            onClick={(e) => { e.stopPropagation(); speak(item.word); }}
-            className="absolute bottom-4 right-4 p-3 bg-blue-50 rounded-full text-blue-500 hover:bg-blue-100 transition-colors"
-          >
-            <Volume2 size={20} />
-          </button>
-        </div>
-
-        {/* Back */}
-        <div className="absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl shadow-md flex flex-col items-center justify-center p-4 backface-hidden rotate-y-180 border-b-8 border-indigo-200"
-             style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-          <h3 className="text-2xl font-bold text-indigo-600 mb-2">{item.meaning}</h3>
-          
-          <div className="text-center w-full bg-white p-3 rounded-xl shadow-sm border border-indigo-100 mb-4">
-            <p className="text-sm text-gray-700 font-medium mb-1 leading-relaxed">
-              {item.sentence}
-            </p>
-            <p className="text-xs text-gray-500">
-              {item.trans}
-            </p>
-          </div>
-
-          <button 
-            onClick={(e) => { e.stopPropagation(); speak(item.sentence); }}
-            className="p-2 bg-white rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center gap-1 font-bold px-4 text-xs shadow-sm border border-indigo-100"
-          >
-            <Volume2 size={16} />
-            唸例句
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState('learn'); // learn, list, quiz
-  const [selectedPart, setSelectedPart] = useState('all'); // 'all', 1, 2, ... 15
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Learn Mode State
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-
-  // Quiz Mode State
-  const [quizScore, setQuizScore] = useState(0);
-  const [quizQuestion, setQuizQuestion] = useState(null);
-  const [quizState, setQuizState] = useState('idle'); // idle, answered
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [questionCount, setQuestionCount] = useState(0); // 目前第幾題
-  const [isQuizOver, setIsQuizOver] = useState(false);   // 是否結束
-  const [quizQueue, setQuizQueue] = useState([]); // 新增：測驗隊列
-
-  // Filter Data based on selected Part
-  const filteredData = useMemo(() => {
-    let data = fullVocabularyData;
-    if (selectedPart !== 'all') {
-      data = data.filter(item => item.part === parseInt(selectedPart));
-    }
-    return data;
-  }, [selectedPart]);
-
-  // Search Data (only for List view)
-  const searchData = useMemo(() => {
-    return filteredData.filter(item => 
-      item.word.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      item.meaning.includes(searchTerm)
-    );
-  }, [filteredData, searchTerm]);
-
-  const speak = (text) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.8;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  // --- Quiz Mode Functions ---
-  
-  // 開始/重置測驗
-  const startQuiz = () => {
-    // 檢查是否單字量太少
-    if (filteredData.length < 4) {
-      alert("單字量不足，請選擇 'All' 或包含更多單字的單元！");
-      return;
-    }
-
-    setQuizScore(0);
-    setQuestionCount(0);
-    setIsQuizOver(false);
-    setQuizState('idle');
-    
-    // 產生不重複的題庫隊列 (隨機洗牌後取前 10 個)
-    const shuffled = [...filteredData].sort(() => 0.5 - Math.random());
-    const newQueue = shuffled.slice(0, 10);
-    setQuizQueue(newQueue);
-
-    generateQuestion(0, newQueue); // 傳入 0 代表是第一題，並傳入新隊列
-  };
-
-  const generateQuestion = (index, currentQueue = quizQueue) => {
-    // 檢查是否已經 10 題了 或 超出隊列長度
-    if (index >= 10 || index >= currentQueue.length) {
-      setIsQuizOver(true);
-      return;
-    }
-
-    const correctWord = currentQueue[index];
-    
-    // 錯誤選項 (從 filteredData 中挑選，排除正確答案)
-    const wrongAnswers = filteredData
-      .filter(item => item.id !== correctWord.id)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3);
-    
-    const options = [...wrongAnswers, correctWord].sort(() => 0.5 - Math.random());
-    
-    setQuizQuestion({ target: correctWord, options: options });
-    setQuizState('idle');
-    setSelectedAnswer(null);
-    setQuestionCount(index + 1); // 設定為當前題號 (1-based)
-  };
-
-  const handleAnswer = (answer) => {
-    if (quizState === 'answered') return;
-    setSelectedAnswer(answer);
-    setQuizState('answered');
-    if (answer.id === quizQuestion.target.id) {
-      setQuizScore(prev => prev + 10);
-      speak(quizQuestion.target.word); // 只唸單字，不唸 Correct
-    } else {
-      speak("Try again.");
-    }
-  };
-
-  // 當切換到 Quiz 分頁或是切換單元時，重置測驗
-  useEffect(() => {
-    if (activeTab === 'quiz') {
-      startQuiz();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedPart]);
-
-  return (
-    <div className="min-h-screen bg-indigo-50 font-sans text-gray-800 pb-20">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 shadow-lg sticky top-0 z-20">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Star className="text-yellow-300 fill-current w-8 h-8 animate-spin-slow" />
-            <h1 className="text-2xl font-bold text-white tracking-wider">
-              小六英文單字王
-            </h1>
-          </div>
-          
-          <div className="flex items-center gap-2 bg-white/20 p-1 rounded-lg backdrop-blur-sm">
-            <Filter size={18} className="text-white ml-2" />
-            <select 
-              value={selectedPart} 
-              onChange={(e) => setSelectedPart(e.target.value)}
-              className="bg-transparent text-white font-bold p-1 outline-none cursor-pointer border-none"
-            >
-              <option className="text-gray-800" value="all">全部單元 (1-15)</option>
-              {Array.from({length: 15}, (_, i) => (
-                <option key={i+1} className="text-gray-800" value={i+1}>Part {i+1}</option>
-              ))}
-            </select>
-            <div className="text-xs font-bold text-indigo-800 bg-yellow-300 px-2 py-1 rounded-md mr-1">
-              {filteredData.length} 字
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto p-4 mt-4">
+        /* 簡單的動畫定義 */
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
         
-        {/* Navigation Tabs */}
-        <div className="flex justify-center gap-2 md:gap-4 mb-8">
-          {[
-            { id: 'learn', icon: BookOpen, label: '背單字', color: 'blue' },
-            { id: 'list', icon: List, label: '單字表', color: 'green' },
-            { id: 'quiz', icon: Gamepad2, label: '小測驗', color: 'purple' }
-          ].map(tab => (
-            <button 
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl font-bold transition-all transform hover:scale-105 shadow-sm
-                ${activeTab === tab.id 
-                  ? `bg-${tab.color}-500 text-white shadow-${tab.color}-300 ring-4 ring-${tab.color}-100` 
-                  : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+        @keyframes bounce-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in {
+            animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+        }
+        
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-indigo-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- 圖示組件 (SVG) ---
+        const Icon = ({ children, className, size = 24, ...props }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className} 
+                {...props}
             >
-              <tab.icon size={20} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+                {children}
+            </svg>
+        );
 
-        {/* --- Content: Flashcards (Learn Mode) - GRID VIEW --- */}
-        {activeTab === 'learn' && filteredData.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
-            {filteredData.map(item => (
-              <Flashcard key={item.id} item={item} speak={speak} />
-            ))}
-          </div>
-        )}
+        const Volume2 = (props) => <Icon {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></Icon>;
+        const ChevronLeft = (props) => <Icon {...props}><polyline points="15 18 9 12 15 6"></polyline></Icon>;
+        const ChevronRight = (props) => <Icon {...props}><polyline points="9 18 15 12 9 6"></polyline></Icon>;
+        const BookOpen = (props) => <Icon {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></Icon>;
+        const Gamepad2 = (props) => <Icon {...props}><line x1="6" y1="11" x2="10" y2="11"></line><line x1="8" y1="9" x2="8" y2="13"></line><line x1="15" y1="12" x2="15.01" y2="12"></line><line x1="18" y1="10" x2="18.01" y2="10"></line><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"></path></Icon>;
+        const ListIcon = (props) => <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon>;
+        const Star = (props) => <Icon {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></Icon>;
+        const RefreshCcw = (props) => <Icon {...props}><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></Icon>;
+        const CheckCircle = (props) => <Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></Icon>;
+        const XCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></Icon>;
+        const Trophy = (props) => <Icon {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17"></path><path d="M14 14.66V17"></path><path d="M12 22a7 7 0 0 0 7-7H5a7 7 0 0 0 7 7z"></path><path d="M8 2h8"></path></Icon>;
+        const Search = (props) => <Icon {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></Icon>;
+        const Filter = (props) => <Icon {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></Icon>;
 
-        {/* --- Content: List View --- */}
-        {activeTab === 'list' && (
-          <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
-             {/* ... list content ... */}
-            <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-              <Search className="text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="搜尋單字..." 
-                className="bg-transparent outline-none w-full text-lg"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-12 bg-gray-50/50 p-4 font-bold text-gray-500 border-b text-sm md:text-base">
-              <div className="col-span-1 hidden md:block">Part</div>
-              <div className="col-span-4 md:col-span-3">單字</div>
-              <div className="col-span-3 md:col-span-2">中文</div>
-              <div className="col-span-4 md:col-span-5">例句</div>
-              <div className="col-span-1 text-center">音</div>
-            </div>
-            <div className="divide-y divide-gray-100 max-h-[65vh] overflow-y-auto">
-              {searchData.map((item) => (
-                <div key={item.id} className="grid grid-cols-12 p-4 hover:bg-indigo-50 transition-colors items-center text-sm md:text-base group">
-                  <div className="col-span-1 text-gray-300 font-mono hidden md:block">{item.part}</div>
-                  <div className="col-span-4 md:col-span-3 font-bold text-gray-800 flex items-center gap-2">
-                    <span className="text-xl">{item.emoji}</span>
-                    <span className="group-hover:text-indigo-600 transition-colors">{item.word}</span>
-                  </div>
-                  <div className="col-span-3 md:col-span-2 text-indigo-600 font-medium">{item.meaning}</div>
-                  <div className="col-span-4 md:col-span-5 text-gray-600">
-                    <div className="mb-1 truncate">{item.sentence}</div>
-                    <div className="text-gray-400 text-xs hidden md:block truncate">{item.trans}</div>
-                  </div>
-                  <div className="col-span-1 flex justify-center">
-                    <button 
-                      onClick={() => speak(item.word)}
-                      className="p-2 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors"
-                    >
-                      <Volume2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {searchData.length === 0 && (
-                <div className="p-8 text-center text-gray-400">
-                  沒有找到相關單字，試試看別的關鍵字？
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        // --- 資料庫 ---
+        const fullVocabularyData = [
+            // Part 1
+            { id: 1, part: 1, word: "ball", meaning: "球", sentence: "Let's play ball.", trans: "來玩球吧。", emoji: "🏀" },
+            { id: 2, part: 1, word: "baseball", meaning: "棒球", sentence: "He likes to play baseball.", trans: "他愛打棒球。", emoji: "⚾" },
+            { id: 3, part: 1, word: "basketball", meaning: "籃球", sentence: "He plays basketball everyday.", trans: "他每天打籃球。", emoji: "🏀" },
+            { id: 4, part: 1, word: "morning", meaning: "早上", sentence: "Good morning, Mr. Wang.", trans: "王先生,早安。", emoji: "🌅" },
+            { id: 5, part: 1, word: "afternoon", meaning: "下午", sentence: "Good afternoon, Mrs. Wang.", trans: "王太太,午安。", emoji: "☀️" },
+            { id: 6, part: 1, word: "evening", meaning: "傍晚", sentence: "Good evening, Mrs. Wang.", trans: "王女士,晚安。", emoji: "🌇" },
+            { id: 7, part: 1, word: "climb", meaning: "爬", sentence: "My mom likes to go mountain climbing.", trans: "我媽媽喜歡爬山。", emoji: "🧗" },
+            { id: 8, part: 1, word: "dance", meaning: "跳舞", sentence: "She can dance.", trans: "她會跳舞。", emoji: "💃" },
+            { id: 9, part: 1, word: "draw", meaning: "畫圖", sentence: "She draws very well.", trans: "她很會畫圖。", emoji: "🎨" },
+            { id: 10, part: 1, word: "exercise", meaning: "運動", sentence: "I need to exercise more.", trans: "我需要多運動。", emoji: "🏃" },
 
-        {/* --- Content: Quiz Mode (UPDATED) --- */}
-        {activeTab === 'quiz' && (
-          <div className="max-w-md mx-auto">
-            {!isQuizOver && quizQuestion ? (
-              <div className="bg-white rounded-3xl shadow-xl p-8 border-b-8 border-purple-200 relative overflow-hidden">
-                {/* Progress Bar & Score */}
-                <div className="absolute top-0 left-0 w-full h-2 bg-purple-50">
-                  <div 
-                    className="h-full bg-purple-500 transition-all duration-300"
-                    style={{ width: `${(questionCount / 10) * 100}%` }}
-                  ></div>
-                </div>
-                
-                <div className="flex justify-between items-center mb-6 mt-2">
-                  <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-bold">
-                     第 {questionCount} / 10 題
-                  </span>
-                  <div className="flex items-center gap-2 text-purple-700 font-bold">
-                    <Trophy size={20} />
-                    <span>得分: {quizScore}</span>
-                  </div>
-                </div>
+            // Part 2
+            { id: 11, part: 2, word: "comic", meaning: "漫畫書", sentence: "I have a new comic book.", trans: "我有一本新漫畫書。", emoji: "📚" },
+            { id: 12, part: 2, word: "fun", meaning: "有趣", sentence: "It is fun!", trans: "好好玩!", emoji: "😄" },
+            { id: 13, part: 2, word: "game", meaning: "遊戲", sentence: "Nobody wants to play games with me.", trans: "沒有人要跟我玩遊戲。", emoji: "🎮" },
+            { id: 14, part: 2, word: "doll", meaning: "洋娃娃", sentence: "You have many dolls.", trans: "你有好多洋娃娃。", emoji: "🧸" },
+            { id: 15, part: 2, word: "interest", meaning: "興趣", sentence: "He has many interests.", trans: "他有很多興趣。", emoji: "❤️" },
+            { id: 16, part: 2, word: "joy", meaning: "喜悦", sentence: "My heart is full of joy.", trans: "我心充滿歡喜。", emoji: "🥳" },
+            { id: 17, part: 2, word: "kite", meaning: "風箏", sentence: "We are playing kites.", trans: "我們正在放風箏。", emoji: "🪁" },
+            { id: 18, part: 2, word: "movie", meaning: "電影", sentence: "Let's see a movie!", trans: "去看電影吧!", emoji: "🎬" },
+            { id: 19, part: 2, word: "music", meaning: "音樂", sentence: "He likes to listen to the music.", trans: "他愛聽音樂。", emoji: "🎵" },
+            { id: 20, part: 2, word: "paint", meaning: "繪畫", sentence: "You are painting.", trans: "你正在畫畫。", emoji: "🖌️" },
 
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2 leading-tight">
-                    <span className="text-purple-600 block text-4xl mb-2">{quizQuestion.target.meaning}</span> 
-                    的英文是？
-                  </h3>
-                </div>
+            // Part 3
+            { id: 21, part: 3, word: "piano", meaning: "鋼琴", sentence: "You can't play the piano.", trans: "你不會彈鋼琴。", emoji: "🎹" },
+            { id: 22, part: 3, word: "play", meaning: "玩", sentence: "Let's go out and play.", trans: "我們出去玩吧。", emoji: "🛝" },
+            { id: 23, part: 3, word: "player", meaning: "選手", sentence: "He is a baseball player.", trans: "他是棒球選手。", emoji: "🧢" },
+            { id: 24, part: 3, word: "run", meaning: "跑步", sentence: "Run!", trans: "快跑!", emoji: "🏃" },
+            { id: 25, part: 3, word: "shop", meaning: "購物", sentence: "He likes to go shopping.", trans: "他很愛購物。", emoji: "🛍️" },
+            { id: 26, part: 3, word: "sing", meaning: "唱歌", sentence: "I don't know how to sing.", trans: "我不知道怎麼唱歌。", emoji: "🎤" },
+            { id: 27, part: 3, word: "swim", meaning: "游泳", sentence: "Can he swim?", trans: "他會游泳嗎?", emoji: "🏊" },
+            { id: 28, part: 3, word: "song", meaning: "歌", sentence: "I love this song.", trans: "我愛這首歌。", emoji: "🎶" },
+            { id: 29, part: 3, word: "sport", meaning: "運動", sentence: "Soccer is your favorite sport.", trans: "足球是你最愛的運動。", emoji: "⚽" },
+            { id: 30, part: 3, word: "toy", meaning: "玩具", sentence: "Kids like toys.", trans: "小孩都喜歡玩具。", emoji: "🤖" },
 
-                <div className="grid grid-cols-1 gap-3">
-                  {quizQuestion.options.map((option) => {
-                    let btnClass = "w-full p-4 rounded-xl font-bold text-lg text-left transition-all transform flex items-center justify-between border-2 ";
-                    
-                    if (quizState === 'answered') {
-                      if (option.id === quizQuestion.target.id) {
-                        btnClass += "bg-green-100 border-green-500 text-green-700";
-                      } else if (selectedAnswer?.id === option.id) {
-                        btnClass += "bg-red-100 border-red-500 text-red-700";
-                      } else {
-                        btnClass += "bg-gray-50 border-gray-100 text-gray-400 opacity-50";
-                      }
-                    } else {
-                      btnClass += "bg-white border-gray-100 hover:border-purple-400 hover:bg-purple-50 text-gray-700 shadow-sm hover:scale-[1.02]";
-                    }
+            // Part 4
+            { id: 31, part: 4, word: "win", meaning: "贏", sentence: "You win again.", trans: "你又贏了。", emoji: "🏆" },
+            { id: 32, part: 4, word: "bathroom", meaning: "廁所", sentence: "May I go to the bathroom?", trans: "我可以去上廁所嗎?", emoji: "🚽" },
+            { id: 33, part: 4, word: "bedroom", meaning: "臥房", sentence: "My mother wants me to clean up my bedroom right now.", trans: "我媽要我馬上打掃臥室。", emoji: "🛏️" },
+            { id: 34, part: 4, word: "dining room", meaning: "飯廳", sentence: "She is in the dining room.", trans: "她在飯廳。", emoji: "🍽️" },
+            { id: 35, part: 4, word: "home", meaning: "家", sentence: "Home is where the heart is.", trans: "家就是心之所在。", emoji: "🏠" },
+            { id: 36, part: 4, word: "house", meaning: "房子", sentence: "They live in a small house.", trans: "他們住在小房子裡。", emoji: "🏡" },
+            { id: 37, part: 4, word: "kitchen", meaning: "廚房", sentence: "Where is the kitchen?", trans: "廚房在哪裡?", emoji: "👨‍🍳" },
+            { id: 38, part: 4, word: "living room", meaning: "客廳", sentence: "The living room is so big.", trans: "這間客廳好大。", emoji: "🛋️" },
+            { id: 39, part: 4, word: "room", meaning: "房間", sentence: "Go back to your room.", trans: "回你的房間。", emoji: "🚪" },
+            { id: 40, part: 4, word: "study", meaning: "學習", sentence: "She likes to study English.", trans: "她喜歡學習英文。", emoji: "📖" },
 
-                    return (
-                      <button
-                        key={option.id}
-                        onClick={() => handleAnswer(option)}
-                        disabled={quizState === 'answered'}
-                        className={btnClass}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl filter grayscale-[50%]">{option.emoji}</span>
-                          <span>{option.word}</span>
-                        </div>
-                        {quizState === 'answered' && option.id === quizQuestion.target.id && <CheckCircle className="text-green-600" />}
-                        {quizState === 'answered' && selectedAnswer?.id === option.id && option.id !== quizQuestion.target.id && <XCircle className="text-red-600" />}
-                      </button>
-                    );
-                  })}
-                </div>
+            // Part 5
+            { id: 41, part: 5, word: "window", meaning: "窗戶", sentence: "Please keep the windows open.", trans: "請讓窗戶開著。", emoji: "🪟" },
+            { id: 42, part: 5, word: "bed", meaning: "床", sentence: "Time to go to bed.", trans: "該上床睡覺了。", emoji: "🛌" },
+            { id: 43, part: 5, word: "chair", meaning: "椅子", sentence: "The chair is broken.", trans: "這椅子壞了。", emoji: "🪑" },
+            { id: 44, part: 5, word: "desk", meaning: "書桌", sentence: "Please read at your desk.", trans: "請到你的書桌那邊讀書。", emoji: "🖥️" },
+            { id: 45, part: 5, word: "sofa", meaning: "沙發", sentence: "Please sit on the sofa.", trans: "請坐在沙發上。", emoji: "🛋️" },
+            { id: 46, part: 5, word: "table", meaning: "桌子", sentence: "The table is green.", trans: "這張桌子是綠色的。", emoji: "🪵" },
+            { id: 47, part: 5, word: "camera", meaning: "相機", sentence: "My father has two digital cameras.", trans: "我爸有兩台數位相機。", emoji: "📷" },
+            { id: 48, part: 5, word: "computer", meaning: "電腦", sentence: "My older brother has a new computer.", trans: "我哥哥有一台新電腦。", emoji: "💻" },
+            { id: 49, part: 5, word: "friend", meaning: "朋友", sentence: "We all need friends.", trans: "人都需要朋友。", emoji: "🤝" },
+            { id: 50, part: 5, word: "radio", meaning: "收音機", sentence: "Turn on the radio.", trans: "打開收音機。", emoji: "📻" },
 
-                {quizState === 'answered' && (
-                  <div className="mt-6 text-center animate-bounce-in">
-                    <button 
-                      onClick={() => generateQuestion(questionCount)}
-                      className="bg-purple-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-purple-700 hover:shadow-purple-300 transition-all flex items-center gap-2 mx-auto active:transform active:scale-95"
-                    >
-                      {questionCount < 10 ? (
-                        <>
-                          <RefreshCcw size={20} />
-                          下一題
-                        </>
-                      ) : (
-                        <>
-                          <Trophy size={20} />
-                          看成績
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : isQuizOver ? (
-              // Game Over Screen
-              <div className="bg-white rounded-3xl shadow-xl p-8 border-b-8 border-yellow-200 text-center animate-fade-in">
-                <div className="mb-6">
-                  <div className="inline-block p-6 rounded-full bg-yellow-100 mb-4">
-                    <Trophy size={64} className="text-yellow-500" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">測驗完成！</h2>
-                  <p className="text-gray-500">
-                    單元: {selectedPart === 'all' ? '全部' : `Part ${selectedPart}`}
-                  </p>
-                </div>
+            // Part 6
+            { id: 51, part: 6, word: "telephone", meaning: "電話", sentence: "You can use my telephone.", trans: "你可以用我的電話。", emoji: "☎️" },
+            { id: 52, part: 6, word: "television", meaning: "電視", sentence: "They watch too much television.", trans: "他們看太多電視了。", emoji: "📺" },
+            { id: 53, part: 6, word: "video", meaning: "錄影帶/影片", sentence: "We go to the video store every week.", trans: "我們每週都去錄影帶店。", emoji: "📼" },
+            { id: 54, part: 6, word: "blackboard", meaning: "黑板", sentence: "The teacher is writing on the blackboard.", trans: "老師正在黑板上寫字。", emoji: "🏫" },
+            { id: 55, part: 6, word: "classroom", meaning: "教室", sentence: "Please be quiet in the classroom.", trans: "教室內請保持安靜。", emoji: "👩‍🏫" },
+            { id: 56, part: 6, word: "elementary school", meaning: "國小", sentence: "Welcome to Nan-Shi elementary school.", trans: "歡迎來到南勢國小。", emoji: "🏫" },
+            { id: 57, part: 6, word: "grade", meaning: "年級", sentence: "I'm in the sixth grade this year.", trans: "我今年六年級。", emoji: "6️⃣" },
+            { id: 58, part: 6, word: "school", meaning: "學校", sentence: "I go to school at 7 o'clock.", trans: "我七點上學。", emoji: "🎒" },
+            { id: 59, part: 6, word: "book", meaning: "書", sentence: "He has many books.", trans: "他有很多書。", emoji: "📚" },
+            { id: 60, part: 6, word: "dictionary", meaning: "字典", sentence: "He can look up words in the dictionary.", trans: "他會查字典。", emoji: "📖" },
 
-                <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
-                  <div className="text-gray-500 text-sm mb-1">你的得分</div>
-                  <div className="text-6xl font-black text-purple-600 mb-2">{quizScore}</div>
-                  <div className="text-sm font-bold text-gray-400">總分 100 分</div>
-                </div>
+            // Part 7
+            { id: 61, part: 7, word: "eraser", meaning: "橡皮擦", sentence: "May I use your eraser?", trans: "你的橡皮擦可以借我嗎?", emoji: "🧼" },
+            { id: 62, part: 7, word: "paper", meaning: "紙", sentence: "I need a piece of paper.", trans: "我需要一張紙。", emoji: "📄" },
+            { id: 63, part: 7, word: "pen", meaning: "筆", sentence: "She doesn't have a red pen.", trans: "她沒有紅筆。", emoji: "🖊️" },
+            { id: 64, part: 7, word: "pencil", meaning: "鉛筆", sentence: "She has ten pencils.", trans: "她有十支鉛筆。", emoji: "✏️" },
+            { id: 65, part: 7, word: "ruler", meaning: "尺", sentence: "You need a ruler to draw a line.", trans: "你畫線要用尺。", emoji: "📏" },
+            { id: 66, part: 7, word: "tape", meaning: "膠帶", sentence: "We need the tape to seal the box.", trans: "我們需要膠帶封箱。", emoji: "🩹" },
+            { id: 67, part: 7, word: "workbook", meaning: "習作本", sentence: "Please open your workbooks to page 1.", trans: "請打開習作第一頁。", emoji: "📓" },
+            { id: 68, part: 7, word: "art", meaning: "藝術", sentence: "You have three art classes every week.", trans: "你們每週有三堂美術課。", emoji: "🎨" },
+            { id: 69, part: 7, word: "class", meaning: "課/班級", sentence: "My favorite class is English.", trans: "我最喜歡英文課。", emoji: "🏫" },
+            { id: 70, part: 7, word: "math", meaning: "數學", sentence: "Your favorite class is math.", trans: "你最喜歡數學課。", emoji: "➕" },
 
-                <div className="text-xl font-bold text-gray-700 mb-8">
-                  {quizScore === 100 ? "🎉 太厲害了！全部答對！" : 
-                   quizScore >= 80 ? "🌟 很棒喔！繼續保持！" :
-                   quizScore >= 60 ? "👍 不錯喔！再加油一下！" :
-                   "💪 沒關係，多練習幾次就會了！"}
-                </div>
+            // Part 8
+            { id: 71, part: 8, word: "PE", meaning: "體育課", sentence: "His favorite class is PE.", trans: "他最喜歡體育課。", emoji: "🤸" },
+            { id: 72, part: 8, word: "ask", meaning: "問", sentence: "Can I ask him a question?", trans: "我可以問他問題嗎?", emoji: "🙋" },
+            { id: 73, part: 8, word: "correct", meaning: "正確的", sentence: "Your answer is correct.", trans: "你答對了。", emoji: "✅" },
+            { id: 74, part: 8, word: "answer", meaning: "答案", sentence: "Their answers are wrong.", trans: "他們的答案錯了。", emoji: "📝" },
+            { id: 75, part: 8, word: "copy", meaning: "抄寫", sentence: "Please copy the answers on the blackboard.", trans: "請抄寫黑板上的答案。", emoji: "✍️" },
+            { id: 76, part: 8, word: "grade", meaning: "成績", sentence: "I got good grades on midterm test.", trans: "我的期中考考得很不錯。", emoji: "💯" },
+            { id: 77, part: 8, word: "homework", meaning: "回家功課", sentence: "He has too much homework to do.", trans: "他有很多回家功課要寫。", emoji: "🏠" },
+            { id: 78, part: 8, word: "learn", meaning: "學習", sentence: "We live and learn.", trans: "活到老學到老。", emoji: "🧠" },
+            { id: 79, part: 8, word: "practice", meaning: "練習", sentence: "He needs to practice more.", trans: "他需要多一點練習。", emoji: "⛹️" },
+            { id: 80, part: 8, word: "question", meaning: "問題", sentence: "Do you have any questions?", trans: "還有任何問題嗎?", emoji: "❓" },
 
-                <button 
-                  onClick={startQuiz}
-                  className="w-full bg-yellow-400 text-yellow-900 px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 active:transform active:scale-95"
+            // Part 9
+            { id: 81, part: 9, word: "read", meaning: "閱讀", sentence: "He reads the newspaper everyday.", trans: "他每天閱讀報紙。", emoji: "📖" },
+            { id: 82, part: 9, word: "repeat", meaning: "重複", sentence: "Please repeat after the teacher.", trans: "請跟著老師重複。", emoji: "🔁" },
+            { id: 83, part: 9, word: "spell", meaning: "拼字", sentence: "He knows how to spell his name.", trans: "他知道怎麼拼他的名字。", emoji: "🔤" },
+            { id: 84, part: 9, word: "unit", meaning: "單元", sentence: "There are 5 units in this book.", trans: "這本書有5個單元。", emoji: "📑" },
+            { id: 85, part: 9, word: "teach", meaning: "教導", sentence: "Can you teach me how to ride a bike?", trans: "你可以教我怎麼騎腳踏車嗎?", emoji: "👨‍🏫" },
+            { id: 86, part: 9, word: "test", meaning: "考試", sentence: "They have a math test tomorrow.", trans: "他們明天有數學考試。", emoji: "📝" },
+            { id: 87, part: 9, word: "quiz", meaning: "測驗", sentence: "She has a vocabulary quiz next week.", trans: "下個禮拜她有單字測驗。", emoji: "✍️" },
+            { id: 88, part: 9, word: "understand", meaning: "理解", sentence: "Do you understand?", trans: "你明白嗎?", emoji: "💡" },
+            { id: 89, part: 9, word: "write", meaning: "寫", sentence: "She writes very well.", trans: "她寫得非常好。", emoji: "✏️" },
+            { id: 90, part: 9, word: "airport", meaning: "機場", sentence: "We took a taxi to the airport last night.", trans: "昨晚我們搭計程車去機場。", emoji: "✈️" },
+
+            // Part 10
+            { id: 91, part: 10, word: "bakery", meaning: "麵包店", sentence: "My mom buys bread at this bakery.", trans: "我媽媽在這家麵包店買麵包。", emoji: "🥯" },
+            { id: 92, part: 10, word: "bank", meaning: "銀行", sentence: "My dad works in a bank.", trans: "我爸爸在銀行工作。", emoji: "🏦" },
+            { id: 93, part: 10, word: "bookstore", meaning: "書店", sentence: "My uncle bought a book at the new bookstore.", trans: "我叔叔在新書店買了一本書。", emoji: "📚" },
+            { id: 94, part: 10, word: "student", meaning: "學生", sentence: "My aunt is a college student.", trans: "我的阿姨是大學生。", emoji: "🎓" },
+            { id: 95, part: 10, word: "department store", meaning: "百貨公司", sentence: "He lives near the department store.", trans: "他住在這家百貨公司附近。", emoji: "🏬" },
+            { id: 96, part: 10, word: "hospital", meaning: "醫院", sentence: "His dad works for the hospital.", trans: "他的爸爸在醫院上班。", emoji: "🏥" },
+            { id: 97, part: 10, word: "internet", meaning: "網路", sentence: "You spend too much time on the internet.", trans: "你花太多時間上網了。", emoji: "🌐" },
+            { id: 98, part: 10, word: "library", meaning: "圖書館", sentence: "His sister likes to read in the school library.", trans: "他姐姐喜歡在學校圖書館讀書。", emoji: "🏛️" },
+            { id: 99, part: 10, word: "office", meaning: "辦公室", sentence: "The homeroom teacher is in the office.", trans: "導師正在辦公室。", emoji: "🏢" },
+            { id: 100, part: 10, word: "park", meaning: "公園", sentence: "They play baseball in the park.", trans: "他們在公園打棒球。", emoji: "🌳" },
+
+            // Part 11
+            { id: 101, part: 11, word: "place", meaning: "地方", sentence: "The library is a good place to study.", trans: "圖書館是讀書的好地方。", emoji: "📍" },
+            { id: 102, part: 11, word: "post office", meaning: "郵局", sentence: "His uncle works in the post office.", trans: "他的叔叔在郵局工作。", emoji: "📮" },
+            { id: 103, part: 11, word: "restaurant", meaning: "餐廳", sentence: "His aunt owns a restaurant.", trans: "他的伯母擁有一家餐廳。", emoji: "🍽️" },
+            { id: 104, part: 11, word: "restroom", meaning: "廁所", sentence: "Excuse me. May I go to the restroom?", trans: "不好意思,我可以去一下洗手間嗎?", emoji: "🚻" },
+            { id: 105, part: 11, word: "road", meaning: "馬路", sentence: "Drive carefully on the road.", trans: "小心駕駛。", emoji: "🛣️" },
+            { id: 106, part: 11, word: "shop", meaning: "商店", sentence: "The shop opens at 9 o'clock.", trans: "這家商店九點開始營業。", emoji: "🏪" },
+            { id: 107, part: 11, word: "station", meaning: "車站", sentence: "Where is the train station?", trans: "火車站在哪裡?", emoji: "🚉" },
+            { id: 108, part: 11, word: "store", meaning: "店家", sentence: "He goes to the convenience store every morning.", trans: "他每天早上去便利商店。", emoji: "🏪" },
+            { id: 109, part: 11, word: "street", meaning: "街道", sentence: "Don't play in the street.", trans: "不要在街道上玩耍。", emoji: "🏙️" },
+            { id: 110, part: 11, word: "supermarket", meaning: "超級市場", sentence: "The supermarket is very big.", trans: "這個超級市場非常大。", emoji: "🛒" },
+
+            // Part 12
+            { id: 111, part: 12, word: "theater", meaning: "戲院", sentence: "We don't have a movie theater.", trans: "我們沒有電影院。", emoji: "🎭" },
+            { id: 112, part: 12, word: "zoo", meaning: "動物園", sentence: "How often do you go to the zoo?", trans: "你多常去動物園呢?", emoji: "🦁" },
+            { id: 113, part: 12, word: "tall", meaning: "高的", sentence: "Chien-Ming Wang is 193 centimeters tall.", trans: "王建民身高193公分。", emoji: "🦒" },
+            { id: 114, part: 12, word: "thin", meaning: "瘦的", sentence: "The dancer is thin.", trans: "那個舞者很瘦。", emoji: "🕴️" },
+            { id: 115, part: 12, word: "front", meaning: "前面的", sentence: "She wants to sit in the front of the class.", trans: "她想要坐在教室的前面。", emoji: "⬆️" },
+            { id: 116, part: 12, word: "here", meaning: "這裡", sentence: "She is not here anymore.", trans: "她不再在這裡了。", emoji: "👇" },
+            { id: 117, part: 12, word: "left", meaning: "左邊", sentence: "Please move to the left a little.", trans: "請向左邊稍微移動。", emoji: "⬅️" },
+            { id: 118, part: 12, word: "right", meaning: "右邊/正確", sentence: "Turn right, and you'll see the bus stop.", trans: "右轉,然後你會看到公車站牌。", emoji: "➡️" },
+            { id: 119, part: 12, word: "there", meaning: "那裡", sentence: "I'll always be right there.", trans: "我永遠都在。", emoji: "👉" },
+            { id: 120, part: 12, word: "airplane", meaning: "飛機", sentence: "I traveled to America by airplane.", trans: "我搭飛機去美國旅行。", emoji: "✈️" },
+
+            // Part 13
+            { id: 121, part: 13, word: "bicycle", meaning: "腳踏車", sentence: "She rides a bicycle to school.", trans: "她騎腳踏車上學。", emoji: "🚲" },
+            { id: 122, part: 13, word: "boat", meaning: "小船", sentence: "We can get to Green Island by boat.", trans: "我們可以搭小船去綠島。", emoji: "🚤" },
+            { id: 123, part: 13, word: "bus", meaning: "公車", sentence: "You can take a bus to Taipei.", trans: "你可以搭公車到台北。", emoji: "🚌" },
+            { id: 124, part: 13, word: "car", meaning: "汽車", sentence: "Her mom can drive a car.", trans: "她的媽媽會開車。", emoji: "🚗" },
+            { id: 125, part: 13, word: "taxi", meaning: "計程車", sentence: "Her dad is a taxi driver.", trans: "她的爸爸是計程車司機。", emoji: "🚕" },
+            { id: 126, part: 13, word: "motorcycle", meaning: "摩托車", sentence: "His uncle loves to ride his motorcycle.", trans: "他的伯父喜歡騎他的摩托車。", emoji: "🛵" },
+            { id: 127, part: 13, word: "van", meaning: "廂型車", sentence: "His aunt has a big van.", trans: "他的伯母有輛很大的廂型車。", emoji: "🚐" },
+            { id: 128, part: 13, word: "train", meaning: "火車", sentence: "His sister goes to school by train.", trans: "他的姊姊搭火車上學。", emoji: "🚆" },
+            { id: 129, part: 13, word: "truck", meaning: "貨車", sentence: "His parents drive a truck to work.", trans: "他的父母開貨車去工作。", emoji: "🚚" },
+            { id: 130, part: 13, word: "drive", meaning: "駕駛", sentence: "He can't drive a car yet.", trans: "他還不會開車。", emoji: "🚘" },
+
+            // Part 14
+            { id: 131, part: 14, word: "fly", meaning: "飛翔", sentence: "An airplane can't fly into space.", trans: "飛機不能飛到太空。", emoji: "🕊️" },
+            { id: 132, part: 14, word: "map", meaning: "地圖", sentence: "Dora uses the map to explore.", trans: "Dora用地圖探險。", emoji: "🗺️" },
+            { id: 133, part: 14, word: "ride", meaning: "騎乘", sentence: "It's fun to ride a bike.", trans: "騎腳踏車很有趣。", emoji: "🚴" },
+            { id: 134, part: 14, word: "turn", meaning: "轉", sentence: "Turn your head to the left and you'll see it.", trans: "你往左邊看就會看到了。", emoji: "↩️" },
+            { id: 135, part: 14, word: "basket", meaning: "籃子", sentence: "Don't put your eggs in one basket.", trans: "雞蛋不要放在同一個籃子裡。", emoji: "🧺" },
+            { id: 136, part: 14, word: "box", meaning: "箱子", sentence: "She wants a new pencil box.", trans: "她想要一個新的鉛筆盒。", emoji: "📦" },
+            { id: 137, part: 14, word: "can", meaning: "罐/能", sentence: "He wants a can of coke.", trans: "他想要一罐可樂。", emoji: "🥫" },
+            { id: 138, part: 14, word: "piece", meaning: "張,塊", sentence: "It will be a piece of cake.", trans: "這真是再簡單不過了(一塊蛋糕)。", emoji: "🧩" },
+            { id: 139, part: 14, word: "point", meaning: "分數/點", sentence: "They got 10 points.", trans: "他們得到10分。", emoji: "☝️" },
+            { id: 140, part: 14, word: "big", meaning: "大的", sentence: "It's a big world.", trans: "這個世界很寬廣。", emoji: "🐘" },
+
+            // Part 15
+            { id: 141, part: 15, word: "enough", meaning: "足夠的", sentence: "You are good enough.", trans: "你已經很棒了。", emoji: "👌" },
+            { id: 142, part: 15, word: "medium", meaning: "中間的/中等", sentence: "I want a medium coffee, please.", trans: "我想要一杯中杯咖啡。", emoji: "☕" },
+            { id: 143, part: 15, word: "high", meaning: "高的", sentence: "The birds can fly high.", trans: "鳥兒可以飛得很高。", emoji: "🏔️" },
+            { id: 144, part: 15, word: "low", meaning: "低的", sentence: "The plane is flying very low.", trans: "這輛飛機飛得很低。", emoji: "📉" },
+            { id: 145, part: 15, word: "full", meaning: "滿的/飽的", sentence: "Stop eating when you are full.", trans: "當你已經飽了就別再吃東西了。", emoji: "🌕" },
+            { id: 146, part: 15, word: "short", meaning: "短的/矮的", sentence: "His hair is short.", trans: "他是短頭髮。", emoji: "📏" },
+            { id: 147, part: 15, word: "small", meaning: "小的", sentence: "This classroom is too small.", trans: "教室太小了。", emoji: "🐁" },
+            { id: 148, part: 15, word: "line", meaning: "隊伍,列,線", sentence: "Line up, please.", trans: "請排隊。", emoji: "〰️" },
+            { id: 149, part: 15, word: "America", meaning: "美國", sentence: "I have never been to America.", trans: "我從來沒去過美國。", emoji: "🇺🇸" },
+            { id: 150, part: 15, word: "American", meaning: "美國的/人", sentence: "Do you like American food?", trans: "你喜歡美國食物嗎?", emoji: "🍔" }
+        ];
+
+        const Flashcard = ({ item, speak }) => {
+            const [isFlipped, setIsFlipped] = useState(false);
+
+            return (
+                <div 
+                    className="relative w-full h-80 perspective-1000 cursor-pointer group"
+                    onClick={() => setIsFlipped(!isFlipped)}
                 >
-                  <RefreshCcw size={24} />
-                  再挑戰一次
-                </button>
-              </div>
-            ) : null}
-          </div>
-        )}
-      </main>
+                    <div className={`relative w-full h-full duration-500 preserve-3d transition-transform ${isFlipped ? 'rotate-y-180' : ''}`} 
+                        style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
+                        
+                        {/* Front */}
+                        <div className="absolute w-full h-full bg-white rounded-3xl shadow-md hover:shadow-xl transition-all flex flex-col items-center justify-center p-4 backface-hidden border-b-8 border-blue-200">
+                            <div className="absolute top-4 left-4 text-xs font-bold text-gray-300">
+                                Part {item.part}
+                            </div>
+                            <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform">{item.emoji}</div>
+                            <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">{item.word}</h2>
+                            <p className="text-gray-400 text-xs mt-2 bg-gray-50 px-3 py-1 rounded-full">點擊翻牌</p>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); speak(item.word); }}
+                                className="absolute bottom-4 right-4 p-3 bg-blue-50 rounded-full text-blue-500 hover:bg-blue-100 transition-colors"
+                            >
+                                <Volume2 size={20} />
+                            </button>
+                        </div>
 
-      <footer className="fixed bottom-0 w-full text-center p-3 text-gray-400 text-xs bg-white/80 backdrop-blur-md border-t border-gray-100">
-        Grade 6 Vocabulary Builder • Learning is Fun!
-      </footer>
-    </div>
-  );
-}
+                        {/* Back */}
+                        <div className="absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl shadow-md flex flex-col items-center justify-center p-4 backface-hidden rotate-y-180 border-b-8 border-indigo-200"
+                            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                            <h3 className="text-2xl font-bold text-indigo-600 mb-2">{item.meaning}</h3>
+                            
+                            <div className="text-center w-full bg-white p-3 rounded-xl shadow-sm border border-indigo-100 mb-4">
+                                <p className="text-sm text-gray-700 font-medium mb-1 leading-relaxed">
+                                    {item.sentence}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {item.trans}
+                                </p>
+                            </div>
+
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); speak(item.sentence); }}
+                                className="p-2 bg-white rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center gap-1 font-bold px-4 text-xs shadow-sm border border-indigo-100"
+                            >
+                                <Volume2 size={16} />
+                                唸例句
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('learn'); // learn, list, quiz
+            const [selectedPart, setSelectedPart] = useState('all'); // 'all', 1, 2, ... 15
+            const [searchTerm, setSearchTerm] = useState('');
+            
+            // Learn Mode State
+            const [currentCardIndex, setCurrentCardIndex] = useState(0);
+
+            // Quiz Mode State
+            const [quizScore, setQuizScore] = useState(0);
+            const [quizQuestion, setQuizQuestion] = useState(null);
+            const [quizState, setQuizState] = useState('idle'); // idle, answered
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [questionCount, setQuestionCount] = useState(0); // 目前第幾題
+            const [isQuizOver, setIsQuizOver] = useState(false);   // 是否結束
+            const [quizQueue, setQuizQueue] = useState([]); // 新增：測驗隊列
+
+            // Filter Data based on selected Part
+            const filteredData = useMemo(() => {
+                let data = fullVocabularyData;
+                if (selectedPart !== 'all') {
+                    data = data.filter(item => item.part === parseInt(selectedPart));
+                }
+                return data;
+            }, [selectedPart]);
+
+            // Search Data (only for List view)
+            const searchData = useMemo(() => {
+                return filteredData.filter(item => 
+                    item.word.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                    item.meaning.includes(searchTerm)
+                );
+            }, [filteredData, searchTerm]);
+
+            const speak = (text) => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.8;
+                    window.speechSynthesis.speak(utterance);
+                }
+            };
+
+            // --- Quiz Mode Functions ---
+            
+            // 開始/重置測驗
+            const startQuiz = () => {
+                // 檢查是否單字量太少
+                if (filteredData.length < 4) {
+                    alert("單字量不足，請選擇 'All' 或包含更多單字的單元！");
+                    return;
+                }
+
+                setQuizScore(0);
+                setQuestionCount(0);
+                setIsQuizOver(false);
+                setQuizState('idle');
+                
+                // 產生不重複的題庫隊列 (隨機洗牌後取前 10 個)
+                const shuffled = [...filteredData].sort(() => 0.5 - Math.random());
+                const newQueue = shuffled.slice(0, 10);
+                setQuizQueue(newQueue);
+
+                generateQuestion(0, newQueue); // 傳入 0 代表是第一題，並傳入新隊列
+            };
+
+            const generateQuestion = (index, currentQueue = quizQueue) => {
+                // 檢查是否已經 10 題了 或 超出隊列長度
+                if (index >= 10 || index >= currentQueue.length) {
+                    setIsQuizOver(true);
+                    return;
+                }
+
+                const correctWord = currentQueue[index];
+                
+                // 錯誤選項 (從 filteredData 中挑選，排除正確答案)
+                const wrongAnswers = filteredData
+                    .filter(item => item.id !== correctWord.id)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3);
+                
+                const options = [...wrongAnswers, correctWord].sort(() => 0.5 - Math.random());
+                
+                setQuizQuestion({ target: correctWord, options: options });
+                setQuizState('idle');
+                setSelectedAnswer(null);
+                setQuestionCount(index + 1); // 設定為當前題號 (1-based)
+            };
+
+            const handleAnswer = (answer) => {
+                if (quizState === 'answered') return;
+                setSelectedAnswer(answer);
+                setQuizState('answered');
+                if (answer.id === quizQuestion.target.id) {
+                    setQuizScore(prev => prev + 10);
+                    speak(quizQuestion.target.word); // 只唸單字，不唸 Correct
+                } else {
+                    speak("Try again.");
+                }
+            };
+
+            // 當切換到 Quiz 分頁或是切換單元時，重置測驗
+            useEffect(() => {
+                if (activeTab === 'quiz') {
+                    startQuiz();
+                }
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, [activeTab, selectedPart]);
+
+            return (
+                <div className="min-h-screen bg-indigo-50 font-sans text-gray-800 pb-20">
+                    {/* Header */}
+                    <header className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 shadow-lg sticky top-0 z-20">
+                        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <Star className="text-yellow-300 fill-current w-8 h-8 animate-spin-slow" />
+                                <h1 className="text-2xl font-bold text-white tracking-wider">
+                                    小六英文單字王
+                                </h1>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 bg-white/20 p-1 rounded-lg backdrop-blur-sm">
+                                <Filter size={18} className="text-white ml-2" />
+                                <select 
+                                    value={selectedPart} 
+                                    onChange={(e) => setSelectedPart(e.target.value)}
+                                    className="bg-transparent text-white font-bold p-1 outline-none cursor-pointer border-none"
+                                >
+                                    <option className="text-gray-800" value="all">全部單元 (1-15)</option>
+                                    {Array.from({length: 15}, (_, i) => (
+                                        <option key={i+1} className="text-gray-800" value={i+1}>Part {i+1}</option>
+                                    ))}
+                                </select>
+                                <div className="text-xs font-bold text-indigo-800 bg-yellow-300 px-2 py-1 rounded-md mr-1">
+                                    {filteredData.length} 字
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto p-4 mt-4">
+                        
+                        {/* Navigation Tabs */}
+                        <div className="flex justify-center gap-2 md:gap-4 mb-8">
+                            {[
+                                { id: 'learn', icon: BookOpen, label: '背單字', color: 'blue' },
+                                { id: 'list', icon: ListIcon, label: '單字表', color: 'green' },
+                                { id: 'quiz', icon: Gamepad2, label: '小測驗', color: 'purple' }
+                            ].map(tab => (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl font-bold transition-all transform hover:scale-105 shadow-sm
+                                        ${activeTab === tab.id 
+                                        ? `bg-${tab.color}-500 text-white shadow-${tab.color}-300 ring-4 ring-${tab.color}-100` 
+                                        : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                >
+                                    <tab.icon size={20} />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* --- Content: Flashcards (Learn Mode) - GRID VIEW --- */}
+                        {activeTab === 'learn' && filteredData.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
+                                {filteredData.map(item => (
+                                    <Flashcard key={item.id} item={item} speak={speak} />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* --- Content: List View --- */}
+                        {activeTab === 'list' && (
+                            <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
+                                {/* ... list content ... */}
+                                <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                                    <Search className="text-gray-400" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="搜尋單字..." 
+                                        className="bg-transparent outline-none w-full text-lg"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-12 bg-gray-50/50 p-4 font-bold text-gray-500 border-b text-sm md:text-base">
+                                    <div className="col-span-1 hidden md:block">Part</div>
+                                    <div className="col-span-4 md:col-span-3">單字</div>
+                                    <div className="col-span-3 md:col-span-2">中文</div>
+                                    <div className="col-span-4 md:col-span-5">例句</div>
+                                    <div className="col-span-1 text-center">音</div>
+                                </div>
+                                <div className="divide-y divide-gray-100 max-h-[65vh] overflow-y-auto no-scrollbar">
+                                    {searchData.map((item) => (
+                                        <div key={item.id} className="grid grid-cols-12 p-4 hover:bg-indigo-50 transition-colors items-center text-sm md:text-base group">
+                                            <div className="col-span-1 text-gray-300 font-mono hidden md:block">{item.part}</div>
+                                            <div className="col-span-4 md:col-span-3 font-bold text-gray-800 flex items-center gap-2">
+                                                <span className="text-xl">{item.emoji}</span>
+                                                <span className="group-hover:text-indigo-600 transition-colors">{item.word}</span>
+                                            </div>
+                                            <div className="col-span-3 md:col-span-2 text-indigo-600 font-medium">{item.meaning}</div>
+                                            <div className="col-span-4 md:col-span-5 text-gray-600">
+                                                <div className="mb-1 truncate">{item.sentence}</div>
+                                                <div className="text-gray-400 text-xs hidden md:block truncate">{item.trans}</div>
+                                            </div>
+                                            <div className="col-span-1 flex justify-center">
+                                                <button 
+                                                    onClick={() => speak(item.word)}
+                                                    className="p-2 text-indigo-300 hover:text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors"
+                                                >
+                                                    <Volume2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {searchData.length === 0 && (
+                                        <div className="p-8 text-center text-gray-400">
+                                            沒有找到相關單字，試試看別的關鍵字？
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- Content: Quiz Mode (UPDATED) --- */}
+                        {activeTab === 'quiz' && (
+                            <div className="max-w-md mx-auto">
+                                {!isQuizOver && quizQuestion ? (
+                                    <div className="bg-white rounded-3xl shadow-xl p-8 border-b-8 border-purple-200 relative overflow-hidden">
+                                        {/* Progress Bar & Score */}
+                                        <div className="absolute top-0 left-0 w-full h-2 bg-purple-50">
+                                            <div 
+                                                className="h-full bg-purple-500 transition-all duration-300"
+                                                style={{ width: `${(questionCount / 10) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center mb-6 mt-2">
+                                            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-bold">
+                                                第 {questionCount} / 10 題
+                                            </span>
+                                            <div className="flex items-center gap-2 text-purple-700 font-bold">
+                                                <Trophy size={20} />
+                                                <span>得分: {quizScore}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center mb-8">
+                                            <h3 className="text-2xl font-bold text-gray-800 mb-2 leading-tight">
+                                                <span className="text-purple-600 block text-4xl mb-2">{quizQuestion.target.meaning}</span> 
+                                                的英文是？
+                                            </h3>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {quizQuestion.options.map((option) => {
+                                                let btnClass = "w-full p-4 rounded-xl font-bold text-lg text-left transition-all transform flex items-center justify-between border-2 ";
+                                                
+                                                if (quizState === 'answered') {
+                                                    if (option.id === quizQuestion.target.id) {
+                                                        btnClass += "bg-green-100 border-green-500 text-green-700";
+                                                    } else if (selectedAnswer?.id === option.id) {
+                                                        btnClass += "bg-red-100 border-red-500 text-red-700";
+                                                    } else {
+                                                        btnClass += "bg-gray-50 border-gray-100 text-gray-400 opacity-50";
+                                                    }
+                                                } else {
+                                                    btnClass += "bg-white border-gray-100 hover:border-purple-400 hover:bg-purple-50 text-gray-700 shadow-sm hover:scale-[1.02]";
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={option.id}
+                                                        onClick={() => handleAnswer(option)}
+                                                        disabled={quizState === 'answered'}
+                                                        className={btnClass}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-2xl filter grayscale-[50%]">{option.emoji}</span>
+                                                            <span>{option.word}</span>
+                                                        </div>
+                                                        {quizState === 'answered' && option.id === quizQuestion.target.id && <CheckCircle className="text-green-600" />}
+                                                        {quizState === 'answered' && selectedAnswer?.id === option.id && option.id !== quizQuestion.target.id && <XCircle className="text-red-600" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {quizState === 'answered' && (
+                                            <div className="mt-6 text-center animate-bounce-in">
+                                                <button 
+                                                    onClick={() => generateQuestion(questionCount)}
+                                                    className="bg-purple-600 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-purple-700 hover:shadow-purple-300 transition-all flex items-center gap-2 mx-auto active:transform active:scale-95"
+                                                >
+                                                    {questionCount < 10 ? (
+                                                        <>
+                                                            <RefreshCcw size={20} />
+                                                            下一題
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Trophy size={20} />
+                                                            看成績
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : isQuizOver ? (
+                                    // Game Over Screen
+                                    <div className="bg-white rounded-3xl shadow-xl p-8 border-b-8 border-yellow-200 text-center animate-fade-in">
+                                        <div className="mb-6">
+                                            <div className="inline-block p-6 rounded-full bg-yellow-100 mb-4">
+                                                <Trophy size={64} className="text-yellow-500" />
+                                            </div>
+                                            <h2 className="text-3xl font-bold text-gray-800 mb-2">測驗完成！</h2>
+                                            <p className="text-gray-500">
+                                                單元: {selectedPart === 'all' ? '全部' : `Part ${selectedPart}`}
+                                            </p>
+                                        </div>
+
+                                        <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
+                                            <div className="text-gray-500 text-sm mb-1">你的得分</div>
+                                            <div className="text-6xl font-black text-purple-600 mb-2">{quizScore}</div>
+                                            <div className="text-sm font-bold text-gray-400">總分 100 分</div>
+                                        </div>
+
+                                        <div className="text-xl font-bold text-gray-700 mb-8">
+                                            {quizScore === 100 ? "🎉 太厲害了！全部答對！" : 
+                                            quizScore >= 80 ? "🌟 很棒喔！繼續保持！" :
+                                            quizScore >= 60 ? "👍 不錯喔！再加油一下！" :
+                                            "💪 沒關係，多練習幾次就會了！"}
+                                        </div>
+
+                                        <button 
+                                            onClick={startQuiz}
+                                            className="w-full bg-yellow-400 text-yellow-900 px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 active:transform active:scale-95"
+                                        >
+                                            <RefreshCcw size={24} />
+                                            再挑戰一次
+                                        </button>
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="fixed bottom-0 w-full text-center p-3 text-gray-400 text-xs bg-white/80 backdrop-blur-md border-t border-gray-100">
+                        Grade 6 Vocabulary Builder • Learning is Fun!
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
